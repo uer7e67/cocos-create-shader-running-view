@@ -1,0 +1,64 @@
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: s-vs:vert # builtin header
+      frag: s-fs:frag
+      depthStencilState:
+        depthTest: false
+        depthWrite: false
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendSrcAlpha: src_alpha
+          blendDstAlpha: one_minus_src_alpha
+      properties:
+        mainTexture:    { value: white }
+        mainColor:      { value: [1, 1, 1, 1], editor: { type: color } }
+}%
+
+CCProgram s-vs %{
+  precision highp float;
+  #include <cc-global>
+
+  in vec3 a_position;
+  in vec2 a_texCoord;
+  in vec4 a_color;
+
+  out vec4 color;
+  out vec2 uv0;
+
+  vec4 vert () {
+    vec4 pos = vec4(a_position, 1);
+    pos = cc_matViewProj * pos;
+    uv0 = a_texCoord;
+    color = a_color;
+    return pos;
+  }
+}%
+
+
+CCProgram s-fs %{
+  precision highp float;
+  in vec2 uv0;
+  in vec3 a_position;
+  uniform sampler2D mainTexture;
+
+  uniform Constant {
+    vec4 mainColor;
+  };
+
+  vec4 frag () {
+    vec4 col = mainColor * texture(mainTexture, uv0);
+    vec2 center = vec2(0.5, 0.5);
+    float d = length(uv0 - center); 
+
+    if(d >= 0.5) {
+      col = vec4(0., 1., 0, 0.1);
+    }
+
+    col = smoothstep(0.40, 0.5, d) + col;
+    return col;
+  }
+}%

@@ -1,0 +1,8 @@
+
+{
+
+    "imports" : {
+        "foo": "./assets/lib/foo.ts"
+    }
+
+}

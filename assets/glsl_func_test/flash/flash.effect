@@ -1,0 +1,100 @@
+// Copyright (c) 2017-2020 Xiamen Yaji Software Co., Ltd.
+
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: sprite-vs:vert # builtin header
+      frag: sprite-fs:frag
+      depthStencilState:   # 深度模板状态
+        depthTest: false      # 深度测试
+        depthWrite: false    # 深入写入
+      rasterizerState:    # 光栅化时的可选渲染状态
+        cullMode: none      # 光栅化时剔除模式 front, back, none
+      blendState:    # 混合状态 
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendSrcAlpha: src_alpha
+          blendDstAlpha: one_minus_src_alpha
+      properties:
+        alphaThreshold: { value: 0.5, editor: { range:[0, 1, 0.01], slide: true, tooltip: '透明度阈值' }}
+        lightX: { value: 0.5, editor: { range:[0, 1, 0.01], slide: true, tooltip: "光束中心x" }}
+        # lightY: { value: 0.5, editor: { range:[0, 1, 0.01], slide: true, tooltip: "光束中心y" }}
+
+}%
+
+CCProgram sprite-vs %{
+  precision highp float;
+  #include <builtin/uniforms/cc-global>
+  #if USE_LOCAL
+    #include <builtin/uniforms/cc-local>
+  #endif
+
+  in vec3 a_position; // 顶点坐标 
+  in vec2 a_texCoord; // TextureCoordinate 纹理坐标 
+  in vec4 a_color;    // 顶点颜色 
+
+  out vec4 color;
+  out vec2 uv0;
+
+  vec4 vert () {
+    vec4 pos = vec4(a_position, 1);
+
+    #if USE_PIXEL_ALIGNMENT
+      pos = cc_matView * pos;
+      pos.xyz = floor(pos.xyz);
+      pos = cc_matProj * pos;
+    #else
+      pos = cc_matViewProj * pos;
+    #endif
+
+    uv0 = a_texCoord;
+    color = a_color;
+
+    return pos;
+  }
+}%
+
+CCProgram sprite-fs %{
+  precision highp float;
+  #include <builtin/internal/embedded-alpha>
+  #include <builtin/internal/alpha-test>
+
+  in vec4 color;
+  
+  #if USE_TEXTURE
+    in vec2 uv0;
+    uniform sampler2D mainTexture;
+  #endif
+
+  #if ENABLE_LIGHT
+  uniform Light 
+  {
+    float lightX;
+  };    // 块作用域要加
+  vec4 addLightColor(vec4 textureColor)
+  {
+    return textureColor;
+  }
+  #endif
+
+  vec4 frag () 
+  {
+    vec4 o = vec4(1, 1, 1, 1);
+
+    o *= color;
+    ALPHA_TEST(o);
+
+    #if USE_TEXTURE
+      o *= CCSampleWithAlphaSeparated(mainTexture, uv0);
+    #endif
+
+
+    #if ENABLE_LIGHT
+      o = addLightColor(o);
+    #endif
+
+    return o;
+  }
+}%

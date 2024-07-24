@@ -1,0 +1,16 @@
+{
+  "__version__": "1.0.6",
+  "script": {
+    "previewBrowserslistConfigFile": "project://",
+    "importMap": "project://import-map.json"
+  },
+  "custom_joint_texture_layouts": [],
+  "physics": {
+    "collisionGroups": [
+      {
+        "index": 1,
+        "name": "aaa"
+      }
+    ]
+  }
+}
