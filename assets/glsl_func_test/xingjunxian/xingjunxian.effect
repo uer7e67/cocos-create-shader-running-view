@@ -34,7 +34,6 @@ CCProgram sprite-vs %{
     vec4 pos = vec4(a_position, 1);
     pos = cc_matViewProj * pos;
     uv0 = a_texCoord;
-    uv0.x = uv0.x *sin(cc_time.x);
     color = a_color;
     return pos;
   }
@@ -56,7 +55,8 @@ CCProgram sprite-fs %{
   vec4 frag () {
     vec4 o = vec4(1, 1, 1, 1);
     #if USE_TEXTURE
-      o *= CCSampleWithAlphaSeparated(cc_spriteTexture, uv0);
+      // float offset = fract( sin(cc_time.x) + v_uv0.x);
+      // o *= CCSampleWithAlphaSeparated(cc_spriteTexture, vec2(offset, uv0.y));
     #endif
     o *= color;
     return o;
